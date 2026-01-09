@@ -4,12 +4,14 @@ import {
   createStudentService,
   bulkCreateEmployeeService,
   createEmployeeService,
+  getEmployeeService
 } from "../services/admin.js";
 
 export const getStudent = async (req, res) => {
   try {
     const user = req.user
-    const result = await getStudentService(user);
+    console.log(req.query)
+    const result = await getStudentService(user, req.query.page);
 
     return res.status(201).json({
       success: true,
@@ -111,6 +113,25 @@ export const createEmployee = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: error.message || "Failed to create teacher",
+    });
+  }
+};
+
+export const getEmployees = async (req, res) => {
+  try {
+    const result = await getEmployeeService(req.query);
+
+    res.status(200).json({
+      success: true,
+      message: "Employees fetched successfully",
+      ...result,
+    });
+  } catch (error) {
+    console.error("GET EMPLOYEES ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch employees",
     });
   }
 };

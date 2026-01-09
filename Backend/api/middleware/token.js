@@ -47,7 +47,6 @@ export const refreshToken = (req, res, next) => {
 export const verifyTokenMiddleware = (req, res, next) => {
   try {
     const token = req.cookies.accessToken;
-    console.log(token,">>")
 
     if (!token) {
       return res.status(401).json({ message: "Token missing" });

@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-
 const employeeSchema = new mongoose.Schema(
   {
     employeeId: {
@@ -27,9 +26,9 @@ const employeeSchema = new mongoose.Schema(
       ],
     },
 
-    // Applicable only for teachers
+    // Only for teachers
     standards: {
-      type: [String], // e.g. ["1", "2-A", "10"]
+      type: [String],
       default: [],
     },
 
@@ -46,7 +45,6 @@ const employeeSchema = new mongoose.Schema(
 
     dob: {
       type: Date,
-      required: true,
     },
 
     gender: {
@@ -57,12 +55,13 @@ const employeeSchema = new mongoose.Schema(
     contact: {
       email: {
         type: String,
-        required: true,
-        unique: true,
         lowercase: true,
+        unique: true,
+        sparse: true, // ✅ allows multiple null values
       },
       phone: {
         type: String,
+        required: true,
       },
       address: {
         street: String,
@@ -73,23 +72,6 @@ const employeeSchema = new mongoose.Schema(
       },
     },
 
-    // Parent / Guardian info (optional)
-    father: {
-      name: String,
-      contact: {
-        phone: String,
-        email: String,
-      },
-    },
-
-    mother: {
-      name: String,
-      contact: {
-        phone: String,
-        email: String,
-      },
-    },
-
     salary: {
       type: Number,
     },
@@ -97,12 +79,11 @@ const employeeSchema = new mongoose.Schema(
     joiningDate: {
       type: Date,
       required: true,
-      default: Date.now,
     },
 
     leavingDate: {
       type: Date,
-      default: null, // stays null while employee is active
+      default: null,
     },
 
     status: {
@@ -114,5 +95,4 @@ const employeeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-export default mongoose.model("teacher", employeeSchema);
+export default mongoose.model("Employee", employeeSchema);

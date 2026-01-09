@@ -18,9 +18,10 @@ const menu = [
   { label: "Students", href: "/students", icon: Users },
   { label: "Employees", href: "/employee", icon: Users },
   { label: "Users", href: "/users", icon: Users },
-  { label: "Fees", href: "/fees/collect", icon: IndianRupee },
-  { label: "Reports", href: "/reports", icon: FileBarChart },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Attendance", href: "/attendance", icon: Users },
+  // { label: "Fees", href: "/fees/collect", icon: IndianRupee },
+  // { label: "Reports", href: "/reports", icon: FileBarChart },
+  // { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function DashboardLayout({
