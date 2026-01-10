@@ -1,0 +1,63 @@
+# ===============================
+# Root level
+# ===============================
+.env
+.env.*
+*.log
+
+# ===============================
+# Backend (Node / Express)
+# ===============================
+Backend/node_modules/
+Backend/dist/
+Backend/build/
+Backend/coverage/
+Backend/uploads/
+Backend/tmp/
+
+# Backend env & logs
+Backend/.env
+Backend/.env.*
+Backend/logs/
+Backend/*.log
+
+# PM2
+Backend/.pids
+Backend/pm2*.log
+
+# ===============================
+# Frontend (Next.js / Vite / React)
+# ===============================
+Frontend/node_modules/
+Frontend/.next/
+Frontend/out/
+Frontend/dist/
+Frontend/build/
+Frontend/.cache/
+
+# Frontend env
+Frontend/.env
+Frontend/.env.*
+Frontend/*.log
+
+# ===============================
+# SSL / Certs
+# ===============================
+*.pem
+*.crt
+*.key
+
+# ===============================
+# OS / IDE
+# ===============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ===============================
+# Misc
+# ===============================
+coverage/
+.eslintcache
