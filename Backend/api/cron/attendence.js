@@ -39,7 +39,7 @@ cron.schedule("1 0 * * 1-6", async () => {
             date: today,
             isHoliday: true,
             holidayReason: holiday.title,
-            takenBy: null,
+            takenBy: cls.classTeacherId,
             students: cls.students,
           });
         } else {
@@ -47,7 +47,7 @@ cron.schedule("1 0 * * 1-6", async () => {
             classId: cls._id,
             date: today,
             isHoliday: false,
-            takenBy: null,
+            takenBy: cls.classTeacherId,
             students: cls.students,
           });
         }

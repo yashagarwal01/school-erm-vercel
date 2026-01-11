@@ -15,7 +15,7 @@ const attendanceStudentSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ["present", "absent", "leave","holiday"],
+            enum: ["present", "absent", "leave", "holiday"],
             required: true,
             default: "holiday",
         },
@@ -27,13 +27,19 @@ const attendanceSchema = new mongoose.Schema(
     {
         classId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Class",
+            ref: "class",
             required: true,
         },
 
         date: {
             type: Date,
             required: true,
+        },
+
+        status: {
+            type: String,
+            enum: ["not_taken", "taken"],
+            default: "not_taken",
         },
 
         isHoliday: {

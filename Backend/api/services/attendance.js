@@ -6,7 +6,8 @@ export const getByClassAndDate = async (classId, date) => {
   const attendance = await Attendance.findOne({
     classId,
     date: day,
-  }).populate("students.studentUserId", "name studentId");
+  }).populate("students.studentUserId", "name studentId")
+  .populate("classId", "className section");
 
   if (!attendance) throw new Error("ATTENDANCE_NOT_FOUND");
 
@@ -25,12 +26,15 @@ export const updateAttendance = async (
     throw new Error("CANNOT_UPDATE_HOLIDAY_ATTENDANCE");
   }
 
+  if (attendance.status === "not_taken") {
+    attendance.status = "taken";
+  }
+
   if (!students || students.length === 0) {
     throw new Error("STUDENTS_REQUIRED");
   }
 
   attendance.students = students;
-  console.log(teacherId)
   attendance.takenBy = teacherId;
 
   return await attendance.save();
