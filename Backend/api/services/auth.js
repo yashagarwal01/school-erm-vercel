@@ -40,7 +40,6 @@ export const loginService = async (data) => {
 export const refreshTokenService = async (refreshToken) => {
   try {
 
-    console.log(refreshToken)
 
     if (!refreshToken) {
       return res.status(401).json({ message: "Refresh token required" });

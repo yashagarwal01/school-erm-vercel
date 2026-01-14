@@ -11,7 +11,7 @@ export const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { userId: user._id, role: user.role },
     process.env.JWT_ACCESS_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: "1m" }
   );
 
   const refreshToken = jwt.sign(
@@ -32,11 +32,6 @@ export const refreshToken = (req, res, next) => {
     { expiresIn: "15m" }
   );
 
-  req.refreshToken = jwt.sign(
-    { userId: user._id },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: "7d" }
-  );
 
   next();
 };
@@ -46,12 +41,17 @@ export const refreshToken = (req, res, next) => {
  */
 export const verifyTokenMiddleware = (req, res, next) => {
   try {
-    const token = req.cookies.accessToken;
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
+    // ❌ No token
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "Token missing" });
     }
 
+    // ✅ Extract token
+    const token = authHeader.split(" ")[1];
+
+    // ✅ Verify
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
     req.user = {
@@ -64,3 +64,4 @@ export const verifyTokenMiddleware = (req, res, next) => {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
+
