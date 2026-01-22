@@ -156,7 +156,6 @@ export default function BulkUploadStudents({
       return student;
     });
 
-    console.log("Generated JSON:", students);
     return students;
   };
 

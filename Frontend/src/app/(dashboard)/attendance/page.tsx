@@ -34,24 +34,37 @@ type StudentRow = {
     name: string;
   };
   rollNumber: number;
-  status: "present" | "absent" | "leave" | "holiday";
+  status: "present" | "absent" | "leave" | "unmarked";
+};
+
+type AttendanceDoc = {
+  _id: string;
+  classId: {
+    _id: string;
+    className: string;
+    section: string;
+  };
+  status: string;
+  isHoliday: boolean;
+  holidayReason?: string;
+  holidayDescription?: string;
+  students: StudentRow[];
 };
 
 export default function AttendancePage() {
-  const classId = "695f94dd611d91e3f4b72bab";
+  const schoolId = "695f94dd611d91e3f4b72bab";
 
+  const [attendanceList, setAttendanceList] = useState<AttendanceDoc[]>([]);
+  const [selectedAttendanceId, setSelectedAttendanceId] =
+    useState<string | null>(null);
+  const [activeAttendance, setActiveAttendance] =
+    useState<AttendanceDoc | null>(null);
   const [attendanceId, setAttendanceId] = useState<string | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [time, setTime] = useState(new Date());
-
-  const [meta, setMeta] = useState<{
-    className: string;
-    section: string;
-    status: string;
-  } | null>(null);
 
   /* ================= LIVE CLOCK ================= */
 
@@ -63,73 +76,89 @@ export default function AttendancePage() {
   /* ================= FETCH ATTENDANCE ================= */
 
   useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        setLoading(true);
+  const fetchAttendance = async () => {
+    try {
+      setLoading(true);
 
-        const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const res: AttendanceDoc[] =
+        await getAttendanceByClassAndDate(schoolId, dateStr);
 
-        const res = await getAttendanceByClassAndDate(
-          classId,
-          dateStr
-        );
-
-        setAttendanceId(res._id);
-        setStudents(res.students || []);
-
-        setMeta({
-          className: res.classId?.className,
-          section: res.classId?.section,
-          status: res.status,
-        });
-      } catch (err: any) {
+      if (!res || res.length === 0) {
+        setAttendanceList([]);
+        setActiveAttendance(null);
         setAttendanceId(null);
         setStudents([]);
-        setMeta(null);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchAttendance();
-  }, [classId, selectedDate]);
+      setAttendanceList(res);
+
+      // ✅ select first class by default
+      const first = res[0];
+      setActiveAttendance(first);
+      setAttendanceId(first._id);
+
+      // ✅ CLONE students (no reference sharing)
+      setStudents(first.students.map((s) => ({ ...s })));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAttendance();
+}, [selectedDate]);
+
 
   /* ================= HANDLERS ================= */
 
+  const onClassChange = (id: string) => {
+  const found = attendanceList.find((a) => a._id === id);
+  if (!found) return;
+
+  // ✅ full reset
+  setActiveAttendance(found);
+  setAttendanceId(found._id);
+  setStudents(found.students.map((s) => ({ ...s })));
+};
+
+
   const updateStatus = (
-    studentId: string,
-    status: "present" | "absent" | "leave"
-  ) => {
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.studentUserId._id === studentId
-          ? { ...s, status }
-          : s
-      )
-    );
-  };
+  studentId: string,
+  status: "present" | "absent" | "leave"
+) => {
+  setStudents((prev) =>
+    prev.map((s) =>
+      s.studentUserId._id === studentId
+        ? { ...s, status }
+        : s
+    )
+  );
+};
+
 
   const saveAttendance = async () => {
-    if (!attendanceId) return;
+  if (!attendanceId) return;
 
-    try {
-      await updateAttendance(attendanceId, {
-        students: students.map((s) => ({
-          studentUserId: s.studentUserId._id,
-          rollNumber: s.rollNumber,
-          status: s.status,
-        })),
-      });
+  await updateAttendance(attendanceId, {
+    students: students.map((s) => ({
+      studentUserId: s.studentUserId._id,
+      rollNumber: s.rollNumber,
+      status: s.status,
+    })),
+  });
 
-      toast.success("Attendance saved successfully");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save attendance");
-    }
-  };
+  toast.success("Attendance saved");
+};
+
 
   if (loading) {
     return <p className="p-6">Loading...</p>;
   }
+
+  const meta = attendanceList.find(
+    (a) => a._id === selectedAttendanceId
+  );
 
   /* ================= UI ================= */
 
@@ -139,28 +168,36 @@ export default function AttendancePage() {
       {/* ================= HEADER ================= */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-
-          {/* Left */}
           <div>
-            <h2 className="text-lg font-semibold">
-              Mark Attendance
-            </h2>
-
+            <h2 className="text-lg font-semibold">Mark Attendance</h2>
             {meta && (
               <p className="text-sm text-muted-foreground">
-                Class {meta.className} • Section {meta.section}
+                Class {meta.classId.className} • Section{" "}
+                {meta.classId.section}
               </p>
             )}
           </div>
 
-          {/* Right */}
-          <div className="flex items-center gap-4">
-            {/* Live Clock */}
+          <div className="flex items-center gap-3">
+            {attendanceList.length > 1 && activeAttendance && (
+  <select
+    className="border rounded px-2 py-1 text-sm"
+    value={activeAttendance._id}
+    onChange={(e) => onClassChange(e.target.value)}
+  >
+    {attendanceList.map((a) => (
+      <option key={a._id} value={a._id}>
+        Class {a.classId.className} - {a.classId.section}
+      </option>
+    ))}
+  </select>
+)}
+
+
             <div className="text-sm font-medium">
               {format(time, "hh:mm:ss a")}
             </div>
 
-            {/* Calendar */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -174,26 +211,29 @@ export default function AttendancePage() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(d) => d && setSelectedDate(d)}
-                  initialFocus
                 />
               </PopoverContent>
             </Popover>
           </div>
-
         </CardHeader>
       </Card>
 
-      {/* ================= NO DATA ================= */}
-      {students.length === 0 && (
+      {/* ================= HOLIDAY ================= */}
+      {meta?.isHoliday && (
         <Card>
-          <CardContent className="p-6 text-center text-muted-foreground">
-            No attendance data to show for selected date
+          <CardContent className="p-6 text-center space-y-2">
+            <h3 className="text-lg font-semibold text-red-600">
+              {meta.holidayReason || "Holiday"}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Attendance marking is disabled for this day.
+            </p>
           </CardContent>
         </Card>
       )}
 
       {/* ================= TABLE ================= */}
-      {students.length > 0 && (
+      {!meta?.isHoliday && students.length > 0 && (
         <Card>
           <CardContent className="p-0">
             <table className="w-full border-collapse">
@@ -209,68 +249,62 @@ export default function AttendancePage() {
 
               <tbody>
                 {students.map((row) => (
-                  <tr
-                    key={row.studentUserId._id}
-                    className="border-b"
-                  >
+                  <tr key={row.studentUserId._id} className="border-b">
                     <td className="p-3">{row.rollNumber}</td>
-                    <td className="p-3">
-                      {row.studentUserId.name}
+                    <td className="p-3">{row.studentUserId.name}</td>
+
+                    <td colSpan={3} className="p-0">
+                      <RadioGroup
+                        value={
+                          row.status === "unmarked"
+                            ? undefined
+                            : row.status
+                        }
+                        onValueChange={(v) =>
+                          updateStatus(
+                            row.studentUserId._id,
+                            v as any
+                          )
+                        }
+                        className="grid grid-cols-3"
+                      >
+                        <div className="p-3 text-center">
+                          <RadioGroupItem
+                            value="present"
+                            className="
+                              border-green-500
+                              data-[state=checked]:bg-green-500
+                              data-[state=checked]:border-green-500
+                              data-[state=checked]:text-white
+                            "
+                          />
+                        </div>
+
+                        <div className="p-3 text-center">
+                          <RadioGroupItem
+                            value="absent"
+                            className="
+                              border-red-500
+                              data-[state=checked]:bg-red-500
+                              data-[state=checked]:border-red-500
+                              data-[state=checked]:text-white
+                            "
+                          />
+                        </div>
+
+                        <div className="p-3 text-center">
+                          <RadioGroupItem
+                            value="leave"
+                            className="
+                              border-yellow-500
+                              data-[state=checked]:bg-yellow-500
+                              data-[state=checked]:border-yellow-500
+                              data-[state=checked]:text-white
+                            "
+                          />
+                        </div>
+                      </RadioGroup>
                     </td>
-
-                    {/* ONE radio group per student */}
-                    <RadioGroup
-                      value={
-                        row.status === "holiday"
-                          ? undefined
-                          : row.status
-                      }
-                      onValueChange={(v) =>
-                        updateStatus(
-                          row.studentUserId._id,
-                          v as any
-                        )
-                      }
-                      className="contents"
-                    >
-                      <td className="p-3 text-center align-middle">
-                        <RadioGroupItem
-                          value="present"
-                          className="
-      border-green-500
-      data-[state=checked]:bg-green-500
-      data-[state=checked]:border-green-500
-      data-[state=checked]:text-green-500
-    "
-                        />
-                      </td>
-
-                      <td className="p-3 text-center align-middle">
-                        <RadioGroupItem
-                          value="absent"
-                          className="
-      border-red-500
-      data-[state=checked]:bg-red-500
-      data-[state=checked]:border-red-500
-      data-[state=checked]:text-white
-    "
-                        />
-                      </td>
-
-                      <td className="p-3 text-center align-middle">
-                        <RadioGroupItem
-                          value="leave"
-                          className="
-      border-yellow-500
-      data-[state=checked]:bg-yellow-500
-      data-[state=checked]:border-yellow-500
-      data-[state=checked]:text-white
-    "
-                        />
-                      </td>
-
-
-                    </RadioGroup>
                   </tr>
                 ))}
               </tbody>

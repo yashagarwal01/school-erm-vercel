@@ -3,7 +3,7 @@ import * as AttendanceService from "../services/attendance.js";
 export const getAttendanceByClassAndDate = async (req, res) => {
   try {
     const { classId, date } = req.params;
-    const attendance = await AttendanceService.getByClassAndDate(classId, date);
+    const attendance = await AttendanceService.getByClassAndDate(classId, date,req.user.userId);
     res.json(attendance);
   } catch (err) {
     res.status(404).json({ message: err.message });
@@ -12,7 +12,6 @@ export const getAttendanceByClassAndDate = async (req, res) => {
 
 export const updateAttendance = async (req, res) => {
   try {
-    console.log(req.user)
     const attendance = await AttendanceService.updateAttendance(
       req.params.attendanceId,
       req.body.students,
@@ -20,7 +19,6 @@ export const updateAttendance = async (req, res) => {
     );
     res.json(attendance);
   } catch (err) {
-    // console.log(err)
     res.status(400).json({ message: err.message });
   }
 };

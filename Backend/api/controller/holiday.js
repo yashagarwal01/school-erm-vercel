@@ -11,7 +11,7 @@ export const createHoliday = async (req, res) => {
 
 export const getHolidays = async (req, res) => {
   try {
-    const holidays = await HolidayService.getHolidays();
+    const holidays = await HolidayService.getHolidays(req.query.month);
     res.json(holidays);
   } catch (err) {
     res.status(500).json({ message: err.message });

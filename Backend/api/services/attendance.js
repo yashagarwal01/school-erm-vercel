@@ -1,15 +1,36 @@
 import Attendance from "../models/attendance.js";
+import Class from "../models/class.js";
+import { initializeAttendanceForClass } from "../utils/attendanceInitializer.js";
+import { getISTDayStart } from "../utils/helper.js";
 
-export const getByClassAndDate = async (classId, date) => {
-  const day = new Date(date);
-  day.setHours(0, 0, 0, 0);
-  const attendance = await Attendance.findOne({
-    classId,
+export const getPermissionsForAttendance = async () =>{
+  
+}
+
+export const getByClassAndDate = async (classId, date, userId) => {
+  const day = getISTDayStart(date);
+  // day.setHours(0, 0, 0, 0);
+  let attendance = await Attendance.find({
     date: day,
-  }).populate("students.studentUserId", "name studentId")
-  .populate("classId", "className section");
+    allowedToTake: userId
+  })
+    .populate("students.studentUserId", "name studentId")
+    .populate("classId", "className section");
 
-  if (!attendance) throw new Error("ATTENDANCE_NOT_FOUND");
+  // 👇 LAZY CREATE
+  // if (attendance.length === 0) {
+  //   const cls = await Class.find({});
+
+  //   if (!cls) {
+  //     throw new Error("CLASS_NOT_FOUND");
+  //   }
+
+  //   attendance = await initializeAttendanceForClass(cls, day);
+
+  //   attendance = await Attendance.findById(attendance._id)
+  //     .populate("students.studentUserId", "name studentId")
+  //     .populate("classId", "className section");
+  // }
 
   return attendance;
 };

@@ -445,9 +445,8 @@ export default function AddStudentDialog({ open, createStudent, setOpen }: Props
               <Button
                 onClick={() => {
                   createStudent(form)
-                  console.log("FINAL DATA:", form);
                   setOpen(false);
-                  resetForm();
+                  // resetForm();
                 }}
               >
                 Save Student

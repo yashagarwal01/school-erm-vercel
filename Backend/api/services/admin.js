@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import StudentSchema from "../models/studentProfile.js";
 import EmployeeSchema from "../models/employeeProfile.js";
+import ClassSchema from "../models/class.js";
 import UserSchema from "../models/user.js";
 import { generateId } from "../utils/generateId.js";
 
@@ -84,8 +85,8 @@ export const getStudentService = async (user, query = {}) => {
 
 
 export const createStudentService = async (student) => {
-  const { firstName, lastName, dob } = student;
-  const studentId = generateId("STU")
+  const { firstName, lastName, dob, section, className } = student;
+  const studentId = await generateId("STU")
   // 1️⃣ Check if user already exists
   let user = await UserSchema.findOne({ loginId: studentId });
 
@@ -101,14 +102,53 @@ export const createStudentService = async (student) => {
       status: "Active"
     });
   }
-  return await StudentSchema.create({ ...student, status: "Studying" })
+  const createdStudent = await StudentSchema.create({ ...student,studentId, status: "Studying" })
+
+  const cls = await ClassSchema.findOne({
+    className,
+    section: section || null,
+  });
+
+  if (!cls) {
+    throw new Error("CLASS_NOT_FOUND");
+  }
+
+    //  4️⃣ PREVENT DUPLICATE
+
+  const alreadyAdded = cls.students.some(
+    (s) => s.studentUserId.toString() === user._id.toString()
+  );
+
+  if (alreadyAdded) {
+    return createdStudent;
+  }
+
+    //  5️⃣ ASSIGN ROLL NUMBER
+
+  const lastRoll =
+    cls.students.length > 0
+      ? Math.max(...cls.students.map((s) => s.rollNumber))
+      : 0;
+
+  const rollNumber = lastRoll + 1;
+
+    //  6️⃣ PUSH STUDENT TO CLASS
+
+  cls.students.push({
+    rollNumber,
+    studentUserId: user._id,
+  });
+
+  await cls.save();
+
+  return createdStudent;
 }
 
 
 
 export const createEmployeeService = async (employee) => {
   const { firstName, lastName, dob } = employee;
-  const employeeId = generateId("EMP")
+  const employeeId = await generateId("EMP")
   // 1️⃣ Check if user already exists
   let user = await UserSchema.findOne({ loginId: employeeId });
 
@@ -123,7 +163,7 @@ export const createEmployeeService = async (employee) => {
       password: hashedPassword,
     });
   }
-  return await EmployeeSchema.create(employee)
+  return await EmployeeSchema.create({...employee,employeeId})
 }
 
 export const getEmployeeService = async (query = {}) => {

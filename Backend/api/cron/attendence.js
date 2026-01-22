@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import Class from "../models/class.js";
-import Attendance from "../models/attendance.js";
-import Holiday from "../models/holiday.js";
+import { initializeAttendanceForClass } from "../utils/attendanceInitializer.js"; 
+// ⬆️ adjust path if needed
 
 cron.schedule("1 0 * * 1-6", async () => {
   try {
@@ -13,71 +13,16 @@ cron.schedule("1 0 * * 1-6", async () => {
     const classes = await Class.find({});
 
     for (const cls of classes) {
-      /**
-       * ===============================
-       * 1️⃣ CREATE ATTENDANCE FOR TODAY
-       * ===============================
-       */
-      const todayExists = await Attendance.findOne({
-        classId: cls._id,
-        date: today,
-      });
+      // 1️⃣ Create attendance for today
+      await initializeAttendanceForClass(cls, today);
 
-      if (!todayExists) {
-        // 🔹 Check pre-decided holiday
-        const holiday = await Holiday.findOne({
-          date: today,
-          $or: [
-            { appliesToAllClasses: true },
-            { classIds: cls._id },
-          ],
-        });
-
-        if (holiday) {
-          await Attendance.create({
-            classId: cls._id,
-            date: today,
-            isHoliday: true,
-            holidayReason: holiday.title,
-            takenBy: cls.classTeacherId,
-            students: cls.students,
-          });
-        } else {
-          await Attendance.create({
-            classId: cls._id,
-            date: today,
-            isHoliday: false,
-            takenBy: cls.classTeacherId,
-            students: cls.students,
-          });
-        }
-      }
-
-      /**
-       * ===============================
-       * 2️⃣ IF SATURDAY → CREATE SUNDAY
-       * ===============================
-       */
+      // 2️⃣ If Saturday → auto-create Sunday
       if (isSaturday) {
         const sunday = new Date(today);
         sunday.setDate(sunday.getDate() + 1);
         sunday.setHours(0, 0, 0, 0);
 
-        const sundayExists = await Attendance.findOne({
-          classId: cls._id,
-          date: sunday,
-        });
-
-        if (!sundayExists) {
-          await Attendance.create({
-            classId: cls._id,
-            date: sunday,
-            isHoliday: true,
-            holidayReason: "Sunday",
-            takenBy: null,
-            students: [],
-          });
-        }
+        await initializeAttendanceForClass(cls, sunday);
       }
     }
 

@@ -9,6 +9,7 @@ import auth from "./api/routes/auth.js";
 import admin from "./api/routes/admin.js";
 import classes from "./api/routes/class.js";
 import attendance from "./api/routes/attendance.js";
+import holiday from "./api/routes/holiday.js";
 
 import { connectDB } from "./config/db.js";
 
@@ -46,6 +47,7 @@ app.use("/api/auth", auth);
 app.use("/api/admin", admin);
 app.use("/api/classes", classes);
 app.use("/api/attendance", attendance);
+app.use("/api/holidays", holiday);
 
 /* ===============================
    HEALTH CHECK

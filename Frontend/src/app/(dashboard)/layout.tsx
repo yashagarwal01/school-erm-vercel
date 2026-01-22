@@ -23,6 +23,7 @@ const menu = [
   { label: "Employees", href: "/employee", icon: Users },
   // { label: "Users", href: "/users", icon: Users },
   { label: "Attendance", href: "/attendance", icon: Users },
+  { label: "Holidays", href: "/holidays", icon: Users },
 ];
 
 function Sidebar({ onClick }: { onClick?: () => void }) {

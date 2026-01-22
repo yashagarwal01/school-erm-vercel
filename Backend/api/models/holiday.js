@@ -2,10 +2,14 @@ import mongoose from "mongoose";
 
 const holidaySchema = new mongoose.Schema(
   {
-    date: {
+    dateFrom: {
       type: Date,
       required: true,
-      unique: true,
+      set: (v) => new Date(new Date(v).setHours(0, 0, 0, 0)),
+    },
+    dateTo: {
+      type: Date,
+      required: true,
       set: (v) => new Date(new Date(v).setHours(0, 0, 0, 0)),
     },
 
@@ -42,5 +46,6 @@ const holidaySchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 
 export default mongoose.model("Holiday", holidaySchema);

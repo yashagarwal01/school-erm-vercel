@@ -10,7 +10,7 @@ import { verifyTokenMiddleware } from "../middleware/token.js";
 const router = express.Router();
 
 // Teacher / Admin
-router.get("/class/:classId/date/:date", getAttendanceByClassAndDate);
+router.get("/class/:classId/date/:date",verifyTokenMiddleware, getAttendanceByClassAndDate);
 router.put("/:attendanceId",verifyTokenMiddleware, updateAttendance);
 
 // Student / Admin
