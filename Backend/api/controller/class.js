@@ -27,6 +27,16 @@ export const getClassById = async (req, res) => {
   }
 };
 
+export const assignClassTeacher = async (req, res) => {
+  try {
+    console.log(req.body)
+    const cls = await ClassService.assignClassTeacher(req.params.id, req.body.classTeacherId);
+    res.json(cls);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
 export const addStudentToClass = async (req, res) => {
   try {
     const cls = await ClassService.addStudentToClass(

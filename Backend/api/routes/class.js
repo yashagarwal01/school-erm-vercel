@@ -5,6 +5,7 @@ import {
   getClassById,
   addStudentToClass,
   removeStudentFromClass,
+  assignClassTeacher
 } from "../controller/class.js";
 import { verifyTokenMiddleware } from "../middleware/token.js";
 
@@ -15,6 +16,7 @@ const router = Router();
 router.post("/",verifyTokenMiddleware, createClass);
 router.get("/",verifyTokenMiddleware, getAllClasses);
 router.get("/:id", getClassById);
+router.patch("/assignClassTeacher/:id", assignClassTeacher)
 
 // Admin / Teacher
 router.post("/:classId/students",verifyTokenMiddleware, addStudentToClass);

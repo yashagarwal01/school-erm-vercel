@@ -19,7 +19,7 @@ const classSchema = new mongoose.Schema(
   {
     className: {
       type: String,
-      required: true, // e.g. "10", "12", "LKG"
+      required: true, 
       trim: true,
     },
 
@@ -31,7 +31,7 @@ const classSchema = new mongoose.Schema(
 
     classTeacherId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true, // teacher userId
     },
 

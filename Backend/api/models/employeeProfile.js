@@ -8,6 +8,11 @@ const employeeSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    employeeUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
 
     employeeType: {
       type: String,

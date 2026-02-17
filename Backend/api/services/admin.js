@@ -163,15 +163,18 @@ export const createEmployeeService = async (employee) => {
       password: hashedPassword,
     });
   }
-  return await EmployeeSchema.create({...employee,employeeId})
+  return await EmployeeSchema.create({...employee,employeeId,employeeUserId:user.id})
 }
-
 export const getEmployeeService = async (query = {}) => {
   const { page = 1, limit = 10, search = "" } = query;
 
   const pageNum = Number(page);
   const limitNum = Number(limit);
-  const skip = (pageNum - 1) * limitNum;
+  
+  // Check if we should return all employees (no pagination)
+  const returnAll = pageNum === 0 && limitNum === 0;
+  
+  const skip = returnAll ? 0 : (pageNum - 1) * limitNum;
 
   const hasSearch = search && search.trim() !== "";
   const regex = hasSearch ? new RegExp(search.trim(), "i") : null;
@@ -191,24 +194,30 @@ export const getEmployeeService = async (query = {}) => {
     : {};
 
   /* ================= DB QUERY ================= */
+  let employeesQuery = EmployeeSchema.find(filter)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .select(
+      "employeeId employeeUserId employeeType standards firstName lastName dob gender contact salary joiningDate leavingDate status"
+    );
+
+  // Only apply limit if not returning all
+  if (!returnAll) {
+    employeesQuery = employeesQuery.limit(limitNum);
+  }
+
   const [employees, total] = await Promise.all([
-    EmployeeSchema.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum)
-      .select(
-        "employeeId employeeType standards firstName lastName dob gender contact salary joiningDate leavingDate status"
-      ),
+    employeesQuery,
     EmployeeSchema.countDocuments(filter),
   ]);
 
   /* ================= RESPONSE ================= */
   return {
     pagination: {
-      page: pageNum,
-      limit: limitNum,
+      page: returnAll ? 1 : pageNum,
+      limit: returnAll ? total : limitNum,
       total,
-      totalPages: Math.ceil(total / limitNum),
+      totalPages: returnAll ? 1 : Math.ceil(total / limitNum),
     },
     data: employees.map((e) => ({
       id: e._id,
@@ -227,6 +236,7 @@ export const getEmployeeService = async (query = {}) => {
       joiningDate: e.joiningDate,
       leavingDate: e.leavingDate,
       status: e.status,
+      employeeUserId:e.employeeUserId
     })),
   };
 };

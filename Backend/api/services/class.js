@@ -14,19 +14,31 @@ export const createClass = async (data) => {
 };
 
 export const getAllClasses = async () => {
-  return await Class.find()
+  return await Class.find({},{students:0})
     .populate("classTeacherId", "name")
-    .populate("students.studentUserId", "name studentId")
+    // .populate("students.studentUserId", "name studentId")
     .sort({ className: 1 });
 };
 
 export const getClassById = async (id) => {
   const cls = await Class.findById(id)
-    // .populate("classTeacherId", "name")
+    .populate("classTeacherId", "name employeeId")
     .populate("students.studentUserId", "name studentId");
 
   if (!cls) throw new Error("CLASS_NOT_FOUND");
 
+  return cls;
+};
+
+export const assignClassTeacher = async (id,classTeacherId) => {
+  console.log(classTeacherId)
+  const cls = await Class.findByIdAndUpdate(id,
+    {classTeacherId},
+    { new: true }
+  )
+  .populate("classTeacherId", "name")
+    .populate("students.studentUserId", "name studentId");
+  
   return cls;
 };
 
