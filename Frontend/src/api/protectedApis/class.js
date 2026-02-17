@@ -50,3 +50,28 @@ export const removeStudentFromClass = async (classId, studentUserId) => {
   );
   return res.data;
 };
+
+/**
+ * 📌 Assign class teacher
+ * payload: { teacherUserId }
+ */
+export const assignClassTeacher = async (
+  classId,
+  classTeacherId
+) => {
+  const res = await protectedApi.patch(
+    `/classes/assignClassTeacher/${classId}`,
+    { classTeacherId }
+  );
+  return res.data;
+};
+
+/**
+ * 📌 Remove class teacher
+ */
+export const removeClassTeacher = async (classId) => {
+  const res = await protectedApi.delete(
+    `/classes/${classId}/teacher`
+  );
+  return res.data;
+};

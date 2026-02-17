@@ -76,85 +76,103 @@ export default function AttendancePage() {
   /* ================= FETCH ATTENDANCE ================= */
 
   useEffect(() => {
-  const fetchAttendance = async () => {
-    try {
-      setLoading(true);
+    const fetchAttendance = async () => {
+      try {
+        setLoading(true);
 
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const res: AttendanceDoc[] =
-        await getAttendanceByClassAndDate(schoolId, dateStr);
+        const dateStr = format(selectedDate, "yyyy-MM-dd");
+        const res: AttendanceDoc[] =
+          await getAttendanceByClassAndDate(schoolId, dateStr);
 
-      if (!res || res.length === 0) {
-        setAttendanceList([]);
-        setActiveAttendance(null);
-        setAttendanceId(null);
-        setStudents([]);
-        return;
+        if (!res || res.length === 0) {
+          setAttendanceList([]);
+          setActiveAttendance(null);
+          setAttendanceId(null);
+          setStudents([]);
+          return;
+        }
+
+        setAttendanceList(res);
+
+        // ✅ select first class by default
+        const first = res[0];
+        setActiveAttendance(first);
+        setAttendanceId(first._id);
+
+        // ✅ CLONE students (no reference sharing)
+        setStudents(first.students.map((s) => ({ ...s })));
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setAttendanceList(res);
-
-      // ✅ select first class by default
-      const first = res[0];
-      setActiveAttendance(first);
-      setAttendanceId(first._id);
-
-      // ✅ CLONE students (no reference sharing)
-      setStudents(first.students.map((s) => ({ ...s })));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchAttendance();
-}, [selectedDate]);
+    fetchAttendance();
+  }, [selectedDate]);
 
 
   /* ================= HANDLERS ================= */
 
   const onClassChange = (id: string) => {
-  const found = attendanceList.find((a) => a._id === id);
-  if (!found) return;
+    const found = attendanceList.find((a) => a._id === id);
+    if (!found) return;
 
-  // ✅ full reset
-  setActiveAttendance(found);
-  setAttendanceId(found._id);
-  setStudents(found.students.map((s) => ({ ...s })));
-};
+    // ✅ full reset
+    setActiveAttendance(found);
+    setAttendanceId(found._id);
+    setStudents(found.students.map((s) => ({ ...s })));
+  };
 
 
   const updateStatus = (
-  studentId: string,
-  status: "present" | "absent" | "leave"
-) => {
-  setStudents((prev) =>
-    prev.map((s) =>
-      s.studentUserId._id === studentId
-        ? { ...s, status }
-        : s
-    )
-  );
-};
+    studentId: string,
+    status: "present" | "absent" | "leave"
+  ) => {
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.studentUserId._id === studentId
+          ? { ...s, status }
+          : s
+      )
+    );
+  };
 
 
   const saveAttendance = async () => {
-  if (!attendanceId) return;
+    if (!attendanceId) return;
 
-  await updateAttendance(attendanceId, {
-    students: students.map((s) => ({
-      studentUserId: s.studentUserId._id,
-      rollNumber: s.rollNumber,
-      status: s.status,
-    })),
-  });
+    await updateAttendance(attendanceId, {
+      students: students.map((s) => ({
+        studentUserId: s.studentUserId._id,
+        rollNumber: s.rollNumber,
+        status: s.status,
+      })),
+    });
 
-  toast.success("Attendance saved");
-};
+    toast.success("Attendance saved");
+  };
 
 
   if (loading) {
     return <p className="p-6">Loading...</p>;
   }
+
+  if (!loading && attendanceList.length === 0) {
+  return (
+    <div className="p-6">
+      <Card>
+        <CardContent className="p-10 text-center space-y-3">
+          <h2 className="text-lg font-semibold text-red-600">
+            Not Authorized
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            You are not authorised to mark attendance for any class.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 
   const meta = attendanceList.find(
     (a) => a._id === selectedAttendanceId
@@ -180,18 +198,18 @@ export default function AttendancePage() {
 
           <div className="flex items-center gap-3">
             {attendanceList.length > 1 && activeAttendance && (
-  <select
-    className="border rounded px-2 py-1 text-sm"
-    value={activeAttendance._id}
-    onChange={(e) => onClassChange(e.target.value)}
-  >
-    {attendanceList.map((a) => (
-      <option key={a._id} value={a._id}>
-        Class {a.classId.className} - {a.classId.section}
-      </option>
-    ))}
-  </select>
-)}
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={activeAttendance._id}
+                onChange={(e) => onClassChange(e.target.value)}
+              >
+                {attendanceList.map((a) => (
+                  <option key={a._id} value={a._id}>
+                    Class {a.classId.className} - {a.classId.section}
+                  </option>
+                ))}
+              </select>
+            )}
 
 
             <div className="text-sm font-medium">
