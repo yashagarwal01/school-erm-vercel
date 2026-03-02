@@ -60,3 +60,12 @@ export const removeStudentFromClass = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
+
+export const getAvailableStudents = async (req, res) => {
+  try {
+    const students = await ClassService.getAvailableStudents();
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

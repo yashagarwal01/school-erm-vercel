@@ -24,7 +24,9 @@
     "lodash": "^4.17.21",
     "mongoose": "^8.20.4",
     "multer": "^2.0.2",
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "pdfkit": "^0.15.0",
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

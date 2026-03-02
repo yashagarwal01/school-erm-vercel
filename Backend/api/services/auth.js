@@ -34,7 +34,7 @@ export const loginService = async (data) => {
   }
  const tokens = generateTokens(user)
 
-  return {user:{name:user.name, role:user.role},...tokens};
+  return {user:{_id:user._id, name:user.name, role:user.role},...tokens};
 };
 
 export const refreshTokenService = async (refreshToken) => {

@@ -8,11 +8,6 @@ const attendanceStudentSchema = new mongoose.Schema(
             required: true,
         },
 
-        rollNumber: {
-            type: Number,
-            required: true,
-        },
-
         status: {
             type: String,
             enum: ["present", "absent", "leave", "holiday", "unmarked"],
@@ -51,10 +46,7 @@ const attendanceSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        holidayDescription: {
-            type: String,
-            trim: true,
-        },
+
         takenBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "user", // class teacher / admin
@@ -76,9 +68,10 @@ const attendanceSchema = new mongoose.Schema(
     }
 );
 
-/**
- * 🚫 Prevent duplicate attendance for same class + same day
- */
+// Prevent duplicate attendance for same class + same day
 attendanceSchema.index({ classId: 1, date: 1 }, { unique: true });
+
+// Fast student-centric queries (e.g. "get student X's attendance for a month")
+attendanceSchema.index({ "students.studentUserId": 1, date: 1 });
 
 export default mongoose.model("Attendance", attendanceSchema);

@@ -61,13 +61,63 @@ export const updateAttendance = async (
   return await attendance.save();
 };
 
-export const getStudentAttendance = async (studentUserId, month) => {
-  const start = new Date(month + "-01");
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + 1);
+export const getStudentAttendance = async (studentUserId, from, to) => {
+  const start = new Date(from);
+  const end = new Date(to);
+  end.setDate(end.getDate() + 1); // inclusive end
 
-  return await Attendance.find({
+  const docs = await Attendance.find({
     date: { $gte: start, $lt: end },
-    "students.studentUserId": studentUserId,
+    $or: [
+      { "students.studentUserId": studentUserId },
+      { isHoliday: true },
+    ],
+  })
+    .populate("classId", "className section")
+    .sort({ date: 1 });
+
+  return docs.map((doc) => {
+    const entry = doc.students.find(
+      (s) => s.studentUserId.toString() === studentUserId.toString()
+    );
+    return {
+      date: doc.date.toISOString().split("T")[0],
+      status: doc.isHoliday ? "holiday" : (entry?.status ?? "unmarked"),
+      className: doc.classId?.className ?? "",
+      section: doc.classId?.section ?? "",
+      isHoliday: doc.isHoliday,
+      holidayReason: doc.holidayReason ?? null,
+    };
   });
+};
+
+// Admin: get attendance for a class on a specific date (no permission filter)
+export const adminGetByClassAndDate = async (classId, date) => {
+  const day = getISTDayStart(date);
+  return await Attendance.findOne({ classId, date: day })
+    .populate("students.studentUserId", "name")
+    .populate("classId", "className section")
+    .populate("takenBy", "name")
+    .populate("allowedToTake", "name");
+};
+
+// Admin: get attendance records for a class within a date range (for permission management)
+export const adminGetAttendanceRange = async (classId, from, to) => {
+  const start = getISTDayStart(from);
+  const end = getISTDayStart(to);
+  end.setDate(end.getDate() + 1); // inclusive end
+
+  return await Attendance.find({ classId, date: { $gte: start, $lt: end } })
+    .sort({ date: 1 })
+    .populate("takenBy", "name")
+    .populate("allowedToTake", "_id name");
+};
+
+// Admin: update the allowedToTake array for an attendance record
+export const updatePermissions = async (attendanceId, allowedToTake) => {
+  const attendance = await Attendance.findById(attendanceId);
+  if (!attendance) throw new Error("ATTENDANCE_NOT_FOUND");
+
+  attendance.allowedToTake = allowedToTake;
+  return await attendance.save();
 };

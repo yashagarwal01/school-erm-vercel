@@ -33,6 +33,8 @@ export const initializeAttendanceForClass = async (cls, date) => {
         : holiday?.title || null,
     takenBy: holiday ? null : cls.classTeacherId,
     allowedToTake: [cls.classTeacherId],
-    students: holiday || day.getDay() === 0 ? [] : cls.students,
+    students: holiday || day.getDay() === 0
+      ? []
+      : cls.students.map((s) => ({ studentUserId: s.studentUserId, status: "unmarked" })),
   });
 };

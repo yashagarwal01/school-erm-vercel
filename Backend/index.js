@@ -10,6 +10,10 @@ import admin from "./api/routes/admin.js";
 import classes from "./api/routes/class.js";
 import attendance from "./api/routes/attendance.js";
 import holiday from "./api/routes/holiday.js";
+import exams from "./api/routes/exam.js";
+import marks from "./api/routes/mark.js";
+import subjets from "./api/routes/subject.js";
+import fees from "./api/routes/fee.js";
 
 import { connectDB } from "./config/db.js";
 
@@ -48,6 +52,10 @@ app.use("/api/admin", admin);
 app.use("/api/classes", classes);
 app.use("/api/attendance", attendance);
 app.use("/api/holidays", holiday);
+app.use("/api/exams", exams);
+app.use("/api/subjects", subjets);
+app.use("/api/marks", marks);
+app.use("/api/fees", fees);
 
 /* ===============================
    HEALTH CHECK

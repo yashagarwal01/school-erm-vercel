@@ -5,7 +5,8 @@ import {
   getClassById,
   addStudentToClass,
   removeStudentFromClass,
-  assignClassTeacher
+  assignClassTeacher,
+  getAvailableStudents,
 } from "../controller/class.js";
 import { verifyTokenMiddleware } from "../middleware/token.js";
 
@@ -13,13 +14,14 @@ import { verifyTokenMiddleware } from "../middleware/token.js";
 const router = Router();
 
 // Admin
-router.post("/",verifyTokenMiddleware, createClass);
-router.get("/",verifyTokenMiddleware, getAllClasses);
+router.post("/", verifyTokenMiddleware, createClass);
+router.get("/", verifyTokenMiddleware, getAllClasses);
+router.get("/available-students", verifyTokenMiddleware, getAvailableStudents);
 router.get("/:id", getClassById);
-router.patch("/assignClassTeacher/:id", assignClassTeacher)
+router.patch("/assignClassTeacher/:id", assignClassTeacher);
 
 // Admin / Teacher
-router.post("/:classId/students",verifyTokenMiddleware, addStudentToClass);
-router.delete("/:classId/students/:studentUserId",verifyTokenMiddleware, removeStudentFromClass);
+router.post("/:classId/students", verifyTokenMiddleware, addStudentToClass);
+router.delete("/:classId/students/:studentUserId", verifyTokenMiddleware, removeStudentFromClass);
 
 export default router;

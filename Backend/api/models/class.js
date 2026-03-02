@@ -32,7 +32,7 @@ const classSchema = new mongoose.Schema(
     classTeacherId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
-      required: true, // teacher userId
+      default: null,
     },
 
     students: {
