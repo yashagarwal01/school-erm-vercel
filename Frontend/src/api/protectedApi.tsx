@@ -1,4 +1,10 @@
 import axios from "axios";
+import {
+  getAccessToken,
+  getRefreshToken,
+  updateSession,
+  clearSession,
+} from "@/lib/storage";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -11,7 +17,7 @@ const protectedApi = axios.create({
    Attach access token
 ================================ */
 protectedApi.interceptors.request.use((config: any) => {
-  const token = localStorage.getItem("accessToken");
+  const token = getAccessToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -59,8 +65,7 @@ protectedApi.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // 🔁 refresh token API
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = getRefreshToken();
 
         const refreshRes = await axios.post(
           `${API_URL}/auth/refresh-token`,
@@ -72,18 +77,17 @@ protectedApi.interceptors.response.use(
           }
         );
 
-
         const { accessToken } = refreshRes.data;
 
         if (accessToken) {
-          localStorage.setItem("accessToken", accessToken);
+          updateSession({ accessToken });
         }
 
         processQueue();
         return protectedApi(originalRequest);
       } catch (err) {
         processQueue(err);
-        localStorage.removeItem("accessToken");
+        clearSession();
         window.location.href = "/login";
         return Promise.reject(err);
       } finally {

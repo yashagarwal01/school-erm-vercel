@@ -8,7 +8,8 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import EditTeacherDialog  from "./EditTeacherDialog"
+import EditTeacherDialog from "./EditTeacherDialog";
+import AddStudentDialog from "./AddStudentDialog";
 
 /* ================= TYPES ================= */
 
@@ -37,10 +38,8 @@ type ClassDoc = {
 
 import {
   getClassById,
-  addStudentToClass,
   removeStudentFromClass,
   assignClassTeacher,
-  removeClassTeacher,
 } from "@/api/protectedApis/class";
 
 /* ================= PROPS ================= */
@@ -55,10 +54,6 @@ type ClassDetailsProps = {
 export default function ClassDetails({ classId, teachers }: ClassDetailsProps) {
   const [classData, setClassData] = useState<ClassDoc | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Teacher search state
-  const [teacherSearch, setTeacherSearch] = useState("");
-  const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>(teachers);
 
   /* ================= FETCH CLASS DATA ================= */
 
@@ -78,33 +73,14 @@ export default function ClassDetails({ classId, teachers }: ClassDetailsProps) {
     fetchClassData();
   }, [classId]);
 
-  /* ================= FILTER TEACHERS ON SEARCH ================= */
-
-  useEffect(() => {
-    if (!teacherSearch.trim()) {
-      setFilteredTeachers(teachers);
-    } else {
-      const filtered = teachers.filter((teacher) =>
-        teacher.name.toLowerCase().includes(teacherSearch.toLowerCase())
-      );
-      setFilteredTeachers(filtered);
-    }
-  }, [teacherSearch, teachers]);
-
   /* ================= ACTIONS ================= */
 
-  const handleAddStudent = async (studentId: string) => {
-    if (!classData) return;
-
+  const handleStudentAdded = async () => {
     try {
-      await addStudentToClass(classData._id, studentId);
-      toast.success("Student added");
-
-      // Refresh class data
       const updated = await getClassById(classId);
       setClassData(updated);
-    } catch (err) {
-      toast.error("Failed to add student");
+    } catch {
+      toast.error("Failed to refresh class data");
     }
   };
 
@@ -237,11 +213,7 @@ export default function ClassDetails({ classId, teachers }: ClassDetailsProps) {
         )}
 
         <div className="mt-4">
-          <Button
-            onClick={() => handleAddStudent("STUDENT_ID")}
-          >
-            Add Student
-          </Button>
+          <AddStudentDialog classId={classId} onStudentAdded={handleStudentAdded} />
         </div>
       </CardContent>
     </Card>

@@ -15,7 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Search, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import ClassDetails from "./miniComponents/ClassDetails";
@@ -26,6 +27,7 @@ import ClassDetails from "./miniComponents/ClassDetails";
 type Teacher = {
   _id: string;
   name: string;
+  employeeUserId?: string;
 };
 
 type ClassListItem = {
@@ -36,7 +38,7 @@ type ClassListItem = {
 
 /* ================= API ================= */
 
-import { getAllClasses } from "@/api/protectedApis/class";
+import { getAllClasses, createClass } from "@/api/protectedApis/class";
 import { getEmployee } from "@/api/protectedApis/admin";
 
 /* ================= COMPONENT ================= */
@@ -48,6 +50,13 @@ export default function ClassesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [time, setTime] = useState(new Date());
+
+  // Add Class dialog state
+  const [addClassOpen, setAddClassOpen] = useState(false);
+  const [newClassName, setNewClassName] = useState("");
+  const [newSection, setNewSection] = useState("");
+  const [newTeacherId, setNewTeacherId] = useState("");
+  const [addClassLoading, setAddClassLoading] = useState(false);
 
   /* ================= LIVE CLOCK ================= */
 
@@ -109,6 +118,45 @@ export default function ClassesPage() {
     [classes, activeClassId]
   );
 
+  /* ================= CREATE CLASS ================= */
+
+  const handleCreateClass = async () => {
+    if (!newClassName.trim()) {
+      toast.error("Class name is required");
+      return;
+    }
+
+    try {
+      setAddClassLoading(true);
+      const payload: { className: string; section?: string; classTeacherId?: string } = {
+        className: newClassName.trim(),
+      };
+      if (newSection.trim()) payload.section = newSection.trim();
+      if (newTeacherId) payload.classTeacherId = newTeacherId;
+
+      const created = await createClass(payload);
+
+      setClasses((prev) => [...prev, created]);
+      setActiveClassId(created._id);
+
+      setAddClassOpen(false);
+      setNewClassName("");
+      setNewSection("");
+      setNewTeacherId("");
+
+      toast.success(`Class ${created.className} created`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err.message || "";
+      if (msg === "CLASS_ALREADY_EXISTS") {
+        toast.error("A class with this name and section already exists");
+      } else {
+        toast.error("Failed to create class");
+      }
+    } finally {
+      setAddClassLoading(false);
+    }
+  };
+
   /* ================= LOADING STATE ================= */
 
   if (loading) {
@@ -135,6 +183,73 @@ export default function ClassesPage() {
     </div>
 
     <div className="flex items-center gap-3">
+      {/* Add Class Dialog */}
+      <Dialog open={addClassOpen} onOpenChange={(val) => {
+        setAddClassOpen(val);
+        if (!val) { setNewClassName(""); setNewSection(""); setNewTeacherId(""); }
+      }}>
+        <DialogTrigger asChild>
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Class
+          </Button>
+        </DialogTrigger>
+
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Class</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="className">Class Name <span className="text-destructive">*</span></Label>
+              <Input
+                id="className"
+                placeholder="e.g. 10, 9A, Grade 5"
+                value={newClassName}
+                onChange={(e) => setNewClassName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="section">Section <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input
+                id="section"
+                placeholder="e.g. A, B, Science"
+                value={newSection}
+                onChange={(e) => setNewSection(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="teacher">Class Teacher <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <select
+                id="teacher"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={newTeacherId}
+                onChange={(e) => setNewTeacherId(e.target.value)}
+              >
+                <option value="">— Select teacher —</option>
+                {teachers.map((t) => (
+                  <option key={t.employeeUserId ?? t._id} value={t.employeeUserId ?? t._id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setAddClassOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateClass} disabled={addClassLoading || !newClassName.trim()}>
+                {addClassLoading ? "Creating..." : "Create Class"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Class Selector Modal */}
       <Dialog>
         <DialogTrigger asChild>

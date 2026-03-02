@@ -38,6 +38,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getloginType } from "@/lib/storage";
 
 /* ================= TYPES ================= */
 type Holiday = {
@@ -100,6 +101,8 @@ export default function HolidaysPage() {
   const [title, setTitle] = useState("");
   const [type, setType] = useState("SCHOOL");
   const [open, setOpen] = useState(false);
+  const loginType = getloginType()
+
 
   /* ================= FETCH ================= */
 
@@ -179,7 +182,7 @@ export default function HolidaysPage() {
 
 
 
-        <Dialog open={open} onOpenChange={setOpen}>
+        {loginType != "student" &&<Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>Create Holiday</Button>
           </DialogTrigger>
@@ -227,7 +230,7 @@ export default function HolidaysPage() {
               </div>
             </div>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       {/* ===== MONTH VIEW ===== */}

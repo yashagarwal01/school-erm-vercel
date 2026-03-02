@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -10,6 +10,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import clsx from "clsx";
+import { clearSession } from "@/lib/storage";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 import {
   Sheet,
@@ -17,18 +26,42 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+import { getAllowedMenu } from "@/utils/permissions";
+import { getloginType } from "@/lib/storage";
+import { useState } from "react";
+
+const role = getloginType();
+
 const menu = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Students", href: "/students", icon: Users },
   { label: "Employees", href: "/employee", icon: Users },
-  // { label: "Users", href: "/users", icon: Users },
   { label: "Attendance", href: "/attendance", icon: Users },
   { label: "Classes", href: "/classes", icon: Users },
   { label: "Holidays", href: "/holidays", icon: Users },
+  { label: "Exams", href: "/exams", icon: Users },
+  { label: "Subjects", href: "/subjects", icon: Users },
+  { label: "Marks", href: "/marks", icon: Users },
+  { label: "Fees", href: role === "student" ? "/fees/my" : "/fees/structure", icon: Users },
 ];
+
+const allowedMenu = getAllowedMenu(menu, role);
 
 function Sidebar({ onClick }: { onClick?: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [open, setOpen] = useState(false);
+
+const handleConfirmLogout = () => {
+  handleLogout();
+  setOpen(false);
+};
+
+  const handleLogout = () => {
+    clearSession();
+    router.replace("/login");
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -37,7 +70,7 @@ function Sidebar({ onClick }: { onClick?: () => void }) {
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {menu.map((item) => {
+        {allowedMenu.map((item) => {
           const Icon = item.icon;
           const active = pathname.startsWith(item.href);
 
@@ -61,13 +94,34 @@ function Sidebar({ onClick }: { onClick?: () => void }) {
       </nav>
 
       <div className="p-3 border-t">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3"
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirm Logout</DialogTitle>
+            </DialogHeader>
+
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to logout from your account?
+            </p>
+
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleLogout}>
+                Logout
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

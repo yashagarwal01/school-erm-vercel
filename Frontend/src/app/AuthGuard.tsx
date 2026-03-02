@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { getAccessToken } from "@/lib/storage";
 
 const PROTECTED_ROUTES = [
   "/dashboard",
@@ -29,7 +30,7 @@ export default function AuthGuard({
       return;
     }
 
-    const token = localStorage.getItem("accessToken");
+    const token = getAccessToken();
 
     if (!token) {
       router.replace("/login");

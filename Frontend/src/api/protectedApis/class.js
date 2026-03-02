@@ -75,3 +75,12 @@ export const removeClassTeacher = async (classId) => {
   );
   return res.data;
 };
+
+/**
+ * 📌 Get students not yet enrolled in any class
+ * Returns: [{ _id, name, loginId }]
+ */
+export const getAvailableStudents = async () => {
+  const res = await protectedApi.get("/classes/available-students");
+  return res.data;
+};

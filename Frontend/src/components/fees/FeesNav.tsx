@@ -4,15 +4,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
-const tabs = [
-  { label: "Collect Fees", href: "/fees/collect" },
+const adminTabs = [
   { label: "Fee Structure", href: "/fees/structure" },
-  { label: "Discounts", href: "/fees/discounts" },
+  { label: "Collect Fees", href: "/fees/collect" },
   { label: "Reports", href: "/fees/reports" },
+];
+
+const studentTabs = [
+  { label: "My Fees", href: "/fees/my" },
 ];
 
 export default function FeesNav() {
   const pathname = usePathname();
+  const type =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("type") ?? "").toLowerCase()
+      : "";
+
+  const tabs = type === "student" ? studentTabs : adminTabs;
 
   return (
     <div className="flex gap-2 border-b mb-6">
